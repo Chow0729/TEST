@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+	<context:component-scan base-package="com.mucfc">
+         <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan> 
+
+	<!-- Spring-Mybatis整合 -->
+	<!-- 数据库连接源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="initialSize" value="${initialSize}" />
+		<property name="maxActive" value="${maxActive}" />
+		<property name="maxIdle" value="${maxIdle}" />
+		<property name="minIdle" value="${minIdle}" />
+		<property name="maxWait" value="${maxWait}" />
+	</bean>
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:spring/mybatis-config.xml"></property>
+		<!-- 自动扫描mapping.xml文件 -->
+		<property name="mapperLocations"
+			value="classpath*:com/mucfc/mapper/*Mapper.xml" />
+	</bean>
+	<!-- 定义Mapper接口自动扫描 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.mucfc.dao" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+
+	<!-- (事务管理)transaction manager, use JtaTransactionManager for global tx -->
+	<!-- <bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+ 
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        事务行为控制
+        <tx:attributes>
+            <tx:method name="save" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="insert*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="add*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="create*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="delete*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="remove*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="update*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="edit*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="change*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="batchDelete*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="find*" propagation="SUPPORTS" read-only="true" />
+            <tx:method name="select*" propagation="SUPPORTS" read-only="true" />
+            <tx:method name="get*" propagation="SUPPORTS" read-only="true" />
+       </tx:attributes>
+    </tx:advice>
+    
+    <aop:config>
+    	<aop:pointcut expression="execution(* com.tempetek.oa.*.service.impl.*ServiceImpl.*(..))" id="txPointCut"/>
+    	<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointCut"/>
+    </aop:config> -->
+
+	<!-- 定义文件上传解析器 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!-- 设定默认编码 -->
+		<property name="defaultEncoding" value="UTF-8" />
+		<!-- 设定文件上传的最大值5MB，5*1024*1024 -->
+		<property name="maxUploadSize" value="5242880" />
+		<property name="maxInMemorySize" value="5242880" />
+	</bean>
+	
+<!-- 
+	<bean id="lotteryService" class="com.tempetek.oa.office.service.impl.LotteryServiceImpl">
+	</bean> 
+-->
+
+	<!-- 线程池配置 -->
+	<bean id="threadPool"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<!-- 核心线程数 -->
+		<property name="corePoolSize" value="10" />
+		<!-- 最大线程数 -->
+		<property name="maxPoolSize" value="50" />
+		<!-- 队列最大长度 -->
+		<property name="queueCapacity" value="1000" />
+		<!-- 线程池维护线程所允许的空闲时间 -->
+		<property name="keepAliveSeconds" value="300" />
+		<!-- 线程池对拒绝任务(无线程可用)的处理策略 -->
+		<property name="rejectedExecutionHandler">
+			<bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy" />
+		</property>
+	</bean>
+
+	<!-- 开发时环境 -->
+	<beans profile="dev">
+	    <context:property-placeholder location="classpath:configure_dev.properties" />
+        <util:properties id="configProperties" location="classpath:file_dev.properties"></util:properties>
+    </beans>
+</beans>
